@@ -27,10 +27,10 @@ Bash tool, Python 3 standard library for the data generator.
 
 ## Data
 
-All files live in `data/`. The file IS the table — put the path straight in a
+All files live in `data/`. The file IS the table, so put the path straight in a
 SQL `FROM` clause.
 
-`data/orders_2026_01.csv` through `data/orders_2026_06.csv` (one per month, Jan–Jun 2026):
+`data/orders_2026_01.csv` through `data/orders_2026_06.csv` (one per month, Jan-Jun 2026):
 
 | column | type | notes |
 |---|---|---|
@@ -38,7 +38,7 @@ SQL `FROM` clause.
 | order_date | date (YYYY-MM-DD) | falls inside the file's month |
 | customer_id | int | joins to customers.csv |
 | product_id | int | joins to products.csv |
-| quantity | int | 1–5 |
+| quantity | int | 1 to 5 |
 | unit_price | decimal | price at time of sale |
 
 `data/customers.csv`: `customer_id`, `customer_name`, `region` (West / East / South / Midwest)
@@ -47,7 +47,7 @@ SQL `FROM` clause.
 
 Key facts:
 - **Revenue = `quantity * unit_price`**, computed from the order row. A single
-  monthly orders file is enough to rank products by revenue — no join needed.
+  monthly orders file is enough to rank products by revenue, no join needed.
 - `unit_price` lives on the order (what the customer paid), not on the product.
   `products.csv` deliberately has no price column.
 - `region` is only available by joining `customers.csv`; `category` only by
@@ -77,22 +77,23 @@ load step.
 - **Print the SQL before running it.** Show the query as a formatted SQL block,
   then execute it. The query should be readable on its own.
 - **Compute revenue as `quantity * unit_price`.** A sum of `unit_price` alone is
-  wrong — it ignores how many units were sold.
+  wrong: it ignores how many units were sold.
 - **Join on the natural keys:** `customer_id` for region, `product_id` for
   category. `USING(customer_id)` / `USING(product_id)` keeps joins terse.
 - Round money to 2 decimals in final output (`ROUND(SUM(quantity*unit_price), 2)`).
 
 ## Working principles
 
-- Explain non-obvious SQL briefly — what a glob does, why a join is needed, what a
-  `GROUP BY` grain is — but do not narrate trivial syntax.
+- Explain non-obvious SQL briefly (what a glob does, why a join is needed, what a
+  `GROUP BY` grain is), but do not narrate trivial syntax.
 - Verify results before trusting them. Read the generated SQL line by line; a query
   can run clean and still answer the wrong question (wrong grain, missing filter,
   forgetting to multiply by quantity).
 - When a query looks off, point at the specific line, correct it, and re-run rather
   than starting over.
-- Keep the data local. Nothing in this project requires uploading the CSV files
-  anywhere; DuckDB reads them on the machine.
+- Keep the data files local. DuckDB reads them on the machine and nothing uploads
+  the CSVs. The only thing that leaves is what the model call needs: the question,
+  the schema, the SQL, and a small sample of result rows (which are real values).
 
 ## Regenerating the data
 

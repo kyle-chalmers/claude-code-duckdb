@@ -1,22 +1,22 @@
 # Claude Code + DuckDB: Analyze Any CSV on Your Laptop
 
-Query a folder of messy CSV files in plain English, with no warehouse to set up
-and no database to connect to. You ask the question, an AI agent writes the
-DuckDB SQL, and you read every line so you actually trust the answer.
+Query a folder of CSV files in plain English, with no warehouse to set up and no
+database to connect to. You ask the question, an AI agent writes the DuckDB SQL,
+and you read every line so you actually trust the answer.
 
 This repo is the companion to the video on the
 [Kyle Chalmers Data Plus AI](https://www.youtube.com/@kylechalmersdataai) channel.
-It ships a small, realistic e-commerce dataset (orders split across monthly files,
-plus customers and products) so you can follow along on your own machine.
+It ships a realistic e-commerce dataset (900,000 orders split across six monthly
+files, plus customers and products) so you can follow along on your own machine.
 
 ![How it works: your laptop holds the data files, Claude Code writes the SQL, DuckDB runs it locally, and only the model call goes to the cloud](./images/diagram.png)
 
 ## Why this exists
 
-You have a CSV. Maybe a few. It is too big to open in Excel or it chokes pandas,
-and you just want to ask it a question. The usual reflex is to stand up a cloud
-warehouse, which means an account, a login, and a bill you did not want for a
-single file.
+You have a pile of CSV files. A few hundred thousand rows each, the kind of size
+that turns Excel sluggish and makes pandas feel slow, and you just want to ask a
+question. The usual reflex is to stand up a cloud warehouse, which means an
+account, a login, and a bill you did not want.
 
 DuckDB removes that step. It is an in-process analytical database (think SQLite,
 but built for analytics) that queries CSV, Parquet, and JSON files directly on
@@ -41,6 +41,9 @@ Installing the DuckDB CLI on a Mac is one line:
 brew install duckdb
 ```
 
+Not on a Mac? See [duckdb.org/docs/installation](https://duckdb.org/docs/installation)
+for the Linux and Windows install paths.
+
 There is also an official [`duckdb-skills`](https://github.com/duckdb/duckdb-skills)
 plugin for Claude Code if you prefer a packaged path. This repo uses plain Bash
 plus the `duckdb` CLI because it is the most transparent way to work: you watch
@@ -56,7 +59,16 @@ cd claude-code-duckdb
 duckdb -c "SELECT * FROM 'data/orders_2026_01.csv' LIMIT 5;"
 ```
 
-To regenerate the dataset from scratch (deterministic, seeded):
+Quick health check on a fresh clone (you should see 900000, 50, 20):
+
+```bash
+duckdb -c "SELECT (SELECT COUNT(*) FROM 'data/orders_*.csv') AS orders,
+                  (SELECT COUNT(*) FROM 'data/customers.csv') AS customers,
+                  (SELECT COUNT(*) FROM 'data/products.csv') AS products;"
+```
+
+To regenerate the dataset from scratch (deterministic, seeded, standard library
+only, no `pip install`):
 
 ```bash
 python3 scripts/generate_data.py
@@ -74,13 +86,18 @@ files you join back in.
 | `customers.csv` | `customer_id`, `customer_name`, `region` | Region is West, East, South, or Midwest |
 | `products.csv` | `product_id`, `product_name`, `category` | Category is Electronics, Home, Apparel, or Outdoors |
 
-Two things worth knowing:
+Three things worth knowing:
 
-- **Revenue is `quantity * unit_price`**, taken from the order row. A single
-  monthly file is enough to rank products by revenue, no join required.
-- `unit_price` is the price the customer paid, so it lives on the order.
+- **Revenue is `quantity * unit_price`**, taken from the order row. This is the
+  one easy trap: summing `unit_price` on its own ignores how many units sold and
+  gives a number that looks plausible but is wrong. It is exactly the kind of
+  mistake to catch by reading the SQL.
+- A single monthly file is enough to rank products by revenue, no join required.
+  `unit_price` is the price the customer paid, so it lives on the order;
   `products.csv` has no price column on purpose. Region and category only appear
   once you join `customers.csv` and `products.csv` back in.
+- `order_id` is a text id (`ORD-01-000001`), not a number, so its shape is stable.
+  It is unique but is never used as a join key.
 
 ## Try it yourself
 
@@ -89,8 +106,10 @@ Code in this folder and try these, in order:
 
 1. **"What were the top products by revenue in January?"**
    Reads `data/orders_2026_01.csv` directly. The file is the table, no import step.
+   This first pass ranks by `product_id`, since names live in `products.csv`; the
+   join that brings in product names shows up in the next two questions.
 
-2. **"Now answer that across every month, not just January."**
+2. **"Now answer that across all six monthly files, not just January."**
    Uses a glob, `FROM 'data/orders_*.csv'`, so the whole folder becomes one table.
 
 3. **"Give me revenue by region and by product category."**
@@ -104,11 +123,12 @@ DuckDB's dialect without studying it.
 
 ## The honest boundary
 
-Your raw data stays on your laptop. What leaves is the question you typed, your
-schema, the SQL the agent writes, and a small sample of results, all sent to the
-model API. So it is cheap, but it is not free, and it is not fully private. If you
-need fully offline, point the agent at a local model and trade some quality to
-keep everything on your machine.
+Your data files stay on your laptop. They are never uploaded. What does leave is
+the question you typed, your schema (column names), the SQL the agent writes, and
+a small sample of result rows so the agent can check its work. Those result rows
+are real values from your data, so this is not fully private, and every question
+is tokens, so it is cheap but not free. If you need fully offline, point the agent
+at a local model and trade some quality to keep everything on your machine.
 
 This earns a permanent spot for the everyday question you would otherwise spin up
 a warehouse for. It is for your own local exploration, not a whole team writing
@@ -120,7 +140,7 @@ territory, and DuckDB is single-writer by design.
 ```
 claude-code-duckdb/
 ├── data/                     # the sample CSVs (committed, query these directly)
-│   ├── orders_2026_01.csv    # one orders file per month, Jan–Jun 2026
+│   ├── orders_2026_01.csv    # one orders file per month, Jan-Jun 2026
 │   │   …
 │   ├── orders_2026_06.csv
 │   ├── customers.csv

@@ -16,6 +16,8 @@ Design choices that matter:
 Deterministic: seeded so the committed CSVs are reproducible. Re-running
 regenerates byte-identical files.
 
+Uses only the Python standard library, so there is no `pip install` step.
+
 Usage:
     python3 scripts/generate_data.py
 """
@@ -26,7 +28,9 @@ from pathlib import Path
 
 SEED = 42
 MONTHS = range(1, 7)            # 2026-01 .. 2026-06
-ORDERS_PER_MONTH = 200
+# ~150k orders per month, ~900k total. Big enough that the same questions get
+# slow and clunky in Excel and pandas, while DuckDB still answers instantly.
+ORDERS_PER_MONTH = 150_000
 N_CUSTOMERS = 50
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -99,7 +103,7 @@ def main():
             # order-line price drifts +/-10% around catalog price
             unit_price = round(base_price[pid] * rng.uniform(0.90, 1.10), 2)
             rows.append([
-                f"{m:02d}{seq:04d}",                      # order_id
+                f"ORD-{m:02d}-{seq:06d}",                 # order_id (text, keeps its shape)
                 f"2026-{m:02d}-{rng.randint(1, MONTH_DAYS[m]):02d}",  # order_date
                 rng.randint(1, N_CUSTOMERS),              # customer_id
                 pid,                                      # product_id
