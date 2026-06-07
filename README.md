@@ -31,23 +31,26 @@ stay in control by reading the SQL, not by memorizing DuckDB's dialect first.
 
 | Tool | Version | Purpose |
 |---|---|---|
-| [DuckDB CLI](https://duckdb.org) | 1.5.x | Runs the SQL locally against the CSV files |
 | [Claude Code](https://claude.com/claude-code) | current | Writes and runs the SQL from plain-English prompts |
+| [`duckdb-skills` plugin](https://github.com/duckdb/duckdb-skills) | current | Official Claude Code plugin for DuckDB. The recommended way in, and it can install the DuckDB CLI for you |
+| [DuckDB CLI](https://duckdb.org) | 1.5.x | Runs the SQL locally against the CSV files. The plugin installs this if you do not have it |
 | Python 3 | 3.9+ | Only needed if you want to regenerate the sample data |
 
-Installing the DuckDB CLI on a Mac is one line:
+The quickest setup is the official `duckdb-skills` plugin. Inside Claude Code:
 
-```bash
-brew install duckdb
+```text
+/plugin marketplace add duckdb/duckdb-skills
+/plugin install duckdb-skills@duckdb-skills
 ```
 
-Not on a Mac? See [duckdb.org/docs/installation](https://duckdb.org/docs/installation)
-for the Linux and Windows install paths.
+If you do not have the DuckDB CLI yet, the plugin offers to install it for you
+(`/duckdb-skills:install-duckdb`), so that is the whole setup.
 
-There is also an official [`duckdb-skills`](https://github.com/duckdb/duckdb-skills)
-plugin for Claude Code if you prefer a packaged path. This repo uses plain Bash
-plus the `duckdb` CLI because it is the most transparent way to work: you watch
-every command.
+Prefer to do it by hand? The plugin is a convenience wrapper over the DuckDB CLI,
+so you can skip it entirely: install the CLI yourself (`brew install duckdb` on a
+Mac, or see [duckdb.org/docs/installation](https://duckdb.org/docs/installation)
+for Linux and Windows) and run the `duckdb` commands directly. Either way, you
+read the same SQL. That is the whole point.
 
 ## Setup
 

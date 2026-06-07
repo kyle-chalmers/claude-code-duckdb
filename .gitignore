@@ -11,6 +11,9 @@
 *.duckdb.wal
 *.db
 
+# duckdb-skills plugin state
+.duckdb-skills/
+
 # Python
 __pycache__/
 *.py[cod]

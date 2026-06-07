@@ -68,6 +68,13 @@ duckdb -c "SELECT COUNT(*) FROM 'data/orders_*.csv';"
 DuckDB infers the schema from the CSV header automatically. No `CREATE TABLE`, no
 load step.
 
+If the official [`duckdb-skills`](https://github.com/duckdb/duckdb-skills) plugin is
+installed, its `query`, `read-file`, and `attach-db` skills are the recommended way
+to drive DuckDB from a plain-English question. It is a wrapper over the same DuckDB
+CLI, so everything in this file still holds: query the files directly, prefer a glob
+for multi-file questions, and always surface the SQL that runs so it can be read and
+checked. The plugin writes its state under `.duckdb-skills/` (git-ignored).
+
 ## Conventions
 
 - **The file is the table.** Reference CSV paths directly in `FROM`. Do not import
