@@ -1,0 +1,25 @@
+# Internal, non-public working files
+.internal/
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# DuckDB persistent database files (we query CSVs directly; these are scratch)
+*.duckdb
+*.duckdb.wal
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
