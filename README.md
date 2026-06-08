@@ -150,6 +150,10 @@ claude-code-duckdb/
 │   └── products.csv
 ├── scripts/
 │   └── generate_data.py      # seeded generator that rebuilds data/
+├── sql/                      # saved analysis queries from the walkthrough
+│   ├── june_revenue_by_product.sql
+│   ├── half_year_revenue_by_product.sql
+│   └── monthly_breakdowns.sql
 ├── images/
 │   └── diagram.png           # how the pieces fit together
 ├── CLAUDE.md                 # context for the AI agent
